@@ -1,0 +1,40 @@
+import { InteractivityDetect } from "../../../Enums/InteractivityDetect";
+import { Events } from "./Events/Events";
+import { Modes } from "./Modes/Modes";
+import { HoverMode } from "../../../Enums/Modes/HoverMode";
+export class Interactivity {
+    constructor() {
+        this.detectsOn = InteractivityDetect.canvas;
+        this.events = new Events();
+        this.modes = new Modes();
+    }
+    get detect_on() {
+        return this.detectsOn;
+    }
+    set detect_on(value) {
+        this.detectsOn = value;
+    }
+    load(data) {
+        var _a, _b;
+        if (data !== undefined) {
+            if (data.detectsOn !== undefined) {
+                this.detectsOn = data.detectsOn;
+            }
+            else if (data.detect_on !== undefined) {
+                this.detect_on = data.detect_on;
+            }
+            this.events.load(data.events);
+            this.modes.load(data.modes);
+            if ((_b = (_a = data.modes) === null || _a === void 0 ? void 0 : _a.slow) === null || _b === void 0 ? void 0 : _b.active) {
+                if (this.events.onHover.mode instanceof Array) {
+                    if (this.events.onHover.mode.indexOf(HoverMode.slow) < 0) {
+                        this.events.onHover.mode.push(HoverMode.slow);
+                    }
+                }
+                else if (this.events.onHover.mode !== HoverMode.slow) {
+                    this.events.onHover.mode = [this.events.onHover.mode, HoverMode.slow];
+                }
+            }
+        }
+    }
+}
