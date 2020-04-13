@@ -1,6 +1,5 @@
 import React from 'react';
 import { Component } from 'react';
-import Clarifai from 'clarifai';
 import Particles from 'react-particles-js';
 import Navigation from './Components/Navigation/Navigation';
 import Logo from './Components/Logo/Logo';
@@ -12,9 +11,6 @@ import Rank from './Components/Rank/Rank';
 import './App.css';
 import 'tachyons';
 
-const app = new Clarifai.App({
- apiKey: 'e928102f5cda44748013e52fd47b9337'
-});
 
 
 const particlesOptions = {
@@ -29,23 +25,26 @@ const particlesOptions = {
 	}
 }
 
+const initialState = {
+	input: '',
+	imageUrl: '',
+	box: {},
+	route: 'signin',
+	isSignedIn: false,
+	user: {
+		id: '',
+		name: '',
+		email: '',
+		entries: '',
+		joined: ''
+	}
+}
+
+
 class App extends Component { 
 	constructor() {
 		super();
-		this.state = {
-			input: '',
-			imageUrl: '',
-			box: {},
-			route: 'signin',
-			isSignedIn: false,
-			user: {
-				id: '',
-				name: '',
-				email: '',
-				entries: '',
-				joined: ''
-			}
-		}
+		this.state = initialState;
 	}
 
 	calculateFaceLocation = (data) => {
@@ -85,34 +84,38 @@ class App extends Component {
 		if(route === 'home') {
 			this.setState({isSignedIn: true})
 		} else {
-			this.setState({isSignedIn: false})
+			this.setState(initialState)
 		};
 		this.setState({route: route});
 	}
 
 	onButtonSubmit = (e) => {
-	  this.setState({
-	  	imageUrl: this.state.input
-	  })	
-	  app.models
-	    .predict(
-	  	  Clarifai.FACE_DETECT_MODEL, 
-	  	  this.state.input)
-	    .then(response => {	    	
-	    	fetch('http://localhost:3000/image', {
+	  this.setState({imageUrl: this.state.input})
+	  fetch('http://localhost:3000/imageURL', {
+		method: 'post',
+		headers: {'Content-Type': 'application/json'},
+		body: JSON.stringify({
+			input: this.state.input
+		})
+	  })
+	  .then(response => response.json())
+	    .then(response => {
+	    	if(response) {
+	    	  fetch('http://localhost:3000/image', {
   				method: 'put',
   				headers: {'Content-Type': 'application/json'},
   				body: JSON.stringify({
   					id: this.state.user.id
   				})
-  			})
+  			  })
   			  .then(response => response.json())
   			  .then(count => {
   			  	this.setState(Object.assign(this.state.user, { entries: count }))
   			  })
-	    	this.displayFaceBox(this.calculateFaceLocation(response))    	  	
-	    })	    	
-      	.catch(err => console.log(err));  	    
+  			  .catch(err => console.log(err))	    
+	    	}
+	    	this.displayFaceBox(this.calculateFaceLocation(response))    	  			
+	    })     	
 	}
 
 	render() {
